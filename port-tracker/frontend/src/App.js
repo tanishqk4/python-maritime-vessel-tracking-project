@@ -1,24 +1,59 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Vessels from "./pages/Vessels";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
+import MapView from "./pages/MapView";
+import Dashboard from "./pages/Dashboard";
+import Landing from "./pages/Landing";
+
+
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Dashboard />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vessels"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Vessels />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/map"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MapView />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+      </Routes>
+    </BrowserRouter>
   );
 }
 

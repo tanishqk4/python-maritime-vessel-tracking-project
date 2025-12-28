@@ -1,0 +1,63 @@
+.landing-container {
+  min-height: 100vh;
+  background: linear-gradient(
+      rgba(0, 0, 0, 0.6),
+      rgba(0, 0, 0, 0.6)
+    ),
+    url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.landing-overlay {
+  text-align: center;
+  color: #ffffff;
+  max-width: 600px;
+}
+
+.landing-title {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.landing-subtitle {
+  font-size: 18px;
+  margin-bottom: 40px;
+  color: #e5e7eb;
+}
+
+.landing-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.landing-btn {
+  padding: 14px 30px;
+  font-size: 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.landing-btn.primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.landing-btn.primary:hover {
+  background: #1d4ed8;
+}
+
+.landing-btn.secondary {
+  background: #ffffff;
+  color: #2563eb;
+}
+
+.landing-btn.secondary:hover {
+  background: #e5e7eb;
+}
