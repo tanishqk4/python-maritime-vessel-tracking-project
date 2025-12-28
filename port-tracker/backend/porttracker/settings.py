@@ -16,7 +16,7 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DEBUG", "1") == "1"
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ['*']
 
 # ------------------------------------------------------------------------------
 # Installed Apps
@@ -127,9 +127,12 @@ SIMPLE_JWT = {
 # CORS — Allow React Frontend
 # ------------------------------------------------------------------------------
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+#CORS_ALLOWED_ORIGINS = [
+#    "http://localhost:3000",
+#]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 # ------------------------------------------------------------------------------
 # Password Validators
