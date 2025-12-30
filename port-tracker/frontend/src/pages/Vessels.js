@@ -15,11 +15,14 @@ export default function Vessels() {
   const [status, setStatus] = useState("");
   const [type, setType] = useState("");
 
+  // 🔔 Track subscribed vessels (basic)
+  const [subscribedIds, setSubscribedIds] = useState([]);
 
   const fetchVessels = async () => {
     const params = {};
     if (search) params.search = search;
     if (status) params.status = status;
+    if (type) params.vessel_type = type;
 
     const res = await api.get("/vessels/", { params });
     setVessels(res.data);
@@ -27,7 +30,7 @@ export default function Vessels() {
 
   useEffect(() => {
     fetchVessels();
-  }, [refresh, search, status]);
+  }, [refresh, search, status, type]);
 
   const deleteVessel = async (id) => {
     if (!window.confirm("Delete this vessel?")) return;
@@ -36,6 +39,17 @@ export default function Vessels() {
       setRefresh(!refresh);
     } catch {
       alert("Permission denied");
+    }
+  };
+
+  // 🔔 Subscribe handler
+  const subscribeVessel = async (id) => {
+    try {
+      await api.post(`/vessels/${id}/subscribe/`);
+      setSubscribedIds([...subscribedIds, id]);
+      alert("Subscribed to vessel alerts");
+    } catch {
+      alert("Subscription failed");
     }
   };
 
@@ -105,7 +119,9 @@ export default function Vessels() {
                 <td>{v.vessel_type}</td>
                 <td>{v.status}</td>
                 <td>{v.speed} kn</td>
+
                 <td style={{ display: "flex", gap: "8px" }}>
+                  {/* ✏️ Edit */}
                   {(user.role === "admin" || user.role === "operator") && (
                     <button
                       style={{ background: "#16a34a" }}
@@ -115,6 +131,7 @@ export default function Vessels() {
                     </button>
                   )}
 
+                  {/* 🗑 Delete */}
                   {user.role === "admin" && (
                     <button
                       style={{ background: "#dc2626" }}
@@ -123,6 +140,15 @@ export default function Vessels() {
                       Delete
                     </button>
                   )}
+
+                  {/* 🔔 Subscribe */}
+                  <button
+                    style={{ background: "#2563eb" }}
+                    disabled={subscribedIds.includes(v.id)}
+                    onClick={() => subscribeVessel(v.id)}
+                  >
+                    {subscribedIds.includes(v.id) ? "Subscribed" : "Subscribe"}
+                  </button>
                 </td>
               </tr>
             ))}
