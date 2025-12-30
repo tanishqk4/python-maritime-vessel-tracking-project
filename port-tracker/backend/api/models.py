@@ -67,3 +67,36 @@ class Vessel(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.vessel_type}, {self.mmsi})"
+
+class VesselSubscription(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="subscriptions"
+    )
+    vessel = models.ForeignKey(
+        Vessel,
+        on_delete=models.CASCADE,
+        related_name="subscribers"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "vessel")
+
+    def __str__(self):
+        return f"{self.user.username} → {self.vessel.name}"
+
+
+class VesselAlert(models.Model):
+    vessel = models.ForeignKey(
+        Vessel,
+        on_delete=models.CASCADE,
+        related_name="alerts"
+    )
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Alert: {self.vessel.name}"

@@ -31,3 +31,41 @@ class VesselViewSet(viewsets.ModelViewSet):
 
     # 🎯 Filter by status
     filterset_fields = ['status']
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Vessel, VesselSubscription, VesselAlert
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def subscribe_vessel(request, vessel_id):
+    vessel = Vessel.objects.get(id=vessel_id)
+
+    VesselSubscription.objects.get_or_create(
+        user=request.user,
+        vessel=vessel
+    )
+
+    return Response({"message": "Subscribed successfully"})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_alerts(request):
+    alerts = VesselAlert.objects.filter(
+        vessel__subscribers__user=request.user
+    ).order_by("-created_at")
+
+    data = [
+        {
+            "id": alert.id,
+            "vessel": alert.vessel.name,
+            "message": alert.message,
+            "created_at": alert.created_at,
+        }
+        for alert in alerts
+    ]
+
+    return Response(data)

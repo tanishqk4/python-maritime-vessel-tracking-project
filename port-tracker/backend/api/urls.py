@@ -13,4 +13,7 @@ urlpatterns = [
     path("auth/me/", MeView.as_view(), name="auth_me"),
 
     path("", include(router.urls)),
+    path("vessels/<int:vessel_id>/subscribe/", subscribe_vessel),
+    path("alerts/", my_alerts),
+
 ]
