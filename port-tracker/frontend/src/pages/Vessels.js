@@ -142,13 +142,20 @@ export default function Vessels() {
                   )}
 
                   {/* 🔔 Subscribe */}
-                  <button
-                    style={{ background: "#2563eb" }}
-                    disabled={subscribedIds.includes(v.id)}
-                    onClick={() => subscribeVessel(v.id)}
-                  >
-                    {subscribedIds.includes(v.id) ? "Subscribed" : "Subscribe"}
-                  </button>
+                    <button
+                      style={{
+                        background: "#2563eb",
+                        color: "white",
+                        padding: "6px 10px",
+                        borderRadius: "6px",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => subscribeVessel(v.id)}
+                    >
+                      Subscribe
+                    </button>
+
                 </td>
               </tr>
             ))}
