@@ -4,52 +4,32 @@ import api from "../services/api";
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const storedUser = localStorage.getItem("user");
-
-  const [user, setUser] = useState(
-    storedUser ? JSON.parse(storedUser) : null
-  );
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔐 Fetch logged-in user safely
+  // 🔄 Restore session on app load
   useEffect(() => {
-    const fetchUser = async () => {
+    const initAuth = async () => {
       const token = localStorage.getItem("access");
 
       if (!token) {
-        setUser(null);
         setLoading(false);
         return;
       }
 
       try {
-        const response = await api.get("/auth/me/");
-        setUser(response.data);
-        localStorage.setItem("user", JSON.stringify(response.data));
-      } catch (error) {
-        // Token expired or invalid
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        localStorage.removeItem("user");
+        const res = await api.get("/auth/me/");
+        setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
+      } catch {
+        localStorage.clear();
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser();
-  }, []);
-
-  // 🔒 Optional: clear session on tab/browser close
-  useEffect(() => {
-    const handleUnload = () => {
-      localStorage.removeItem("access");
-      localStorage.removeItem("refresh");
-      localStorage.removeItem("user");
-    };
-
-    window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
+    initAuth();
   }, []);
 
   return (

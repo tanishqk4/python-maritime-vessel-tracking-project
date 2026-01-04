@@ -1,27 +1,29 @@
 import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 
 export default function Login() {
   const { user, setUser } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // 🔁 If already logged in, redirect to dashboard
+  // 🔁 If already logged in, go to dashboard
   useEffect(() => {
     if (user) {
-      window.location.href = "/dashboard";
+      navigate("/dashboard", { replace: true });
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      // 1️⃣ Login → get JWT tokens
+      // 1️⃣ Login → get tokens
       const res = await api.post("/auth/login/", {
         username,
         password,
@@ -31,16 +33,16 @@ export default function Login() {
       localStorage.setItem("access", res.data.access);
       localStorage.setItem("refresh", res.data.refresh);
 
-      // 3️⃣ Fetch logged-in user
+      // 3️⃣ Fetch user
       const userRes = await api.get("/auth/me/");
       localStorage.setItem("user", JSON.stringify(userRes.data));
 
-      // 4️⃣ Update AuthContext immediately
+      // 4️⃣ Update context (THIS IS KEY)
       setUser(userRes.data);
 
-      // 5️⃣ Redirect to dashboard
-      window.location.href = "/dashboard";
-    } catch (err) {
+      // 5️⃣ Navigate (NO PAGE RELOAD)
+      navigate("/dashboard", { replace: true });
+    } catch {
       setError("Invalid username or password");
     }
   };
@@ -79,11 +81,7 @@ export default function Login() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "12px",
-          }}
+          style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
         />
 
         <input
@@ -92,11 +90,7 @@ export default function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "16px",
-          }}
+          style={{ width: "100%", padding: "10px", marginBottom: "16px" }}
         />
 
         <button
