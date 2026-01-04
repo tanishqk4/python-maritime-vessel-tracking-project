@@ -68,15 +68,35 @@ class VesselViewSet(viewsets.ModelViewSet):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def subscribe_vessel(request, vessel_id):
-    vessel = Vessel.objects.get(id=vessel_id)
+    try:
+        vessel = Vessel.objects.get(id=vessel_id)
+    except Vessel.DoesNotExist:
+        return Response(
+            {"error": "Vessel not found"},
+            status=404
+        )
 
-    VesselSubscription.objects.get_or_create(
-        user=request.user,
-        vessel=vessel
+    try:
+        subscription, created = VesselSubscription.objects.get_or_create(
+            user=request.user,
+            vessel=vessel
+        )
+    except IntegrityError:
+        return Response(
+            {"message": "Already subscribed"},
+            status=200
+        )
+
+    if created:
+        return Response(
+            {"message": "Subscribed successfully"},
+            status=201
+        )
+
+    return Response(
+        {"message": "Already subscribed"},
+        status=200
     )
-
-    return Response({"message": "Subscribed successfully"})
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
