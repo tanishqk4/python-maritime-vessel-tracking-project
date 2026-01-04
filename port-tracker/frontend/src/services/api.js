@@ -4,7 +4,7 @@ const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
 });
 
-// ✅ Attach token to every request
+// ✅ Attach token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("access");
   if (token) {
@@ -13,17 +13,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ✅ GLOBAL RESPONSE HANDLER
+// ⚠️ IMPORTANT FIX:
+// Only auto-logout on auth-related endpoints
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem("access");
-      localStorage.removeItem("refresh");
-      localStorage.removeItem("user");
-
-      // Redirect to landing page
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      error.config.url.includes("/auth/")
+    ) {
+      localStorage.clear();
       window.location.href = "/";
     }
     return Promise.reject(error);
