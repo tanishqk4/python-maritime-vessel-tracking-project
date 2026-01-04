@@ -65,6 +65,9 @@ class VesselViewSet(viewsets.ModelViewSet):
 # SUBSCRIPTIONS & ALERTS
 # =========================
 
+from django.db import IntegrityError
+from rest_framework import status
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def subscribe_vessel(request, vessel_id):
@@ -72,31 +75,40 @@ def subscribe_vessel(request, vessel_id):
         vessel = Vessel.objects.get(id=vessel_id)
     except Vessel.DoesNotExist:
         return Response(
-            {"error": "Vessel not found"},
-            status=404
+            {"message": "Vessel not found"},
+            status=status.HTTP_404_NOT_FOUND
         )
 
     try:
-        subscription, created = VesselSubscription.objects.get_or_create(
+        # Manual check to avoid DB crash
+        exists = VesselSubscription.objects.filter(
+            user=request.user,
+            vessel=vessel
+        ).exists()
+
+        if exists:
+            return Response(
+                {"message": "Already subscribed"},
+                status=status.HTTP_200_OK
+            )
+
+        VesselSubscription.objects.create(
             user=request.user,
             vessel=vessel
         )
-    except IntegrityError:
-        return Response(
-            {"message": "Already subscribed"},
-            status=200
-        )
 
-    if created:
         return Response(
             {"message": "Subscribed successfully"},
-            status=201
+            status=status.HTTP_201_CREATED
         )
 
-    return Response(
-        {"message": "Already subscribed"},
-        status=200
-    )
+    except IntegrityError:
+        # Absolute fallback — never crash
+        return Response(
+            {"message": "Already subscribed"},
+            status=status.HTTP_200_OK
+        )
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
