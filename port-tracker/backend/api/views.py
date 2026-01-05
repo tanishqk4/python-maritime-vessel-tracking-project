@@ -128,3 +128,48 @@ def my_alerts(request):
     ]
 
     return Response(data)
+
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Avg
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Vessel
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def port_congestion_metrics(request):
+    now = timezone.now()
+
+    # Vessels currently at port
+    vessels_at_port = Vessel.objects.filter(status="at_port")
+
+    arrivals = vessels_at_port.count()
+    departures = Vessel.objects.filter(status="at_sea").count()
+
+    # Simulated wait times (hours)
+    wait_times = [
+        (now - v.last_updated).total_seconds() / 3600
+        for v in vessels_at_port
+    ]
+
+    avg_wait_time = round(
+        sum(wait_times) / len(wait_times), 2
+    ) if wait_times else 0
+
+    # Congestion logic
+    if arrivals > 10 or avg_wait_time > 12:
+        congestion_level = "High"
+    elif arrivals > 5 or avg_wait_time > 6:
+        congestion_level = "Medium"
+    else:
+        congestion_level = "Low"
+
+    return Response({
+        "arrivals": arrivals,
+        "departures": departures,
+        "average_wait_time_hours": avg_wait_time,
+        "congestion_level": congestion_level,
+    })

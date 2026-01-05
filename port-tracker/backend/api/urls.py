@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .views import port_congestion_metrics
 
 from .views import (
     RegisterView,
@@ -26,4 +27,7 @@ urlpatterns = [
     # 🔔 Subscriptions & alerts
     path("vessels/<int:vessel_id>/subscribe/", subscribe_vessel),
     path("alerts/", my_alerts),
+
+    path("dashboard/port-congestion/", port_congestion_metrics),
+
 ]
