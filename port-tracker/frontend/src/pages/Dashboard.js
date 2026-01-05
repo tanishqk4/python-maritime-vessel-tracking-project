@@ -2,50 +2,75 @@ import React, { useEffect, useState } from "react";
 import api from "../services/api";
 
 export default function Dashboard() {
-  const [total, setTotal] = useState(0);
-  const [atSea, setAtSea] = useState(0);
-  const [atPort, setAtPort] = useState(0);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDashboard = async () => {
       try {
-        const response = await api.get("/vessels/");
-        const vessels = response.data;
-
-        setTotal(vessels.length);
-        setAtSea(vessels.filter(v => v.status === "at_sea").length);
-        setAtPort(vessels.filter(v => v.status === "at_port").length);
+        const res = await api.get("/dashboard/port-congestion/");
+        setData(res.data);
       } catch (error) {
-        console.error("Failed to load dashboard data", error);
+        console.error("Failed to load congestion dashboard", error);
+        setData(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchDashboard();
   }, []);
 
   if (loading) return <p>Loading dashboard...</p>;
+  if (!data) return <p>Unable to load dashboard data</p>;
 
   return (
     <div>
-      <h2>Dashboard</h2>
+      <h2>Port Congestion Dashboard</h2>
 
-      <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
+      <div style={{ display: "flex", gap: "20px", marginTop: "20px", flexWrap: "wrap" }}>
         <div style={cardStyle}>
-          <h3>Total Vessels</h3>
-          <p style={numberStyle}>{total}</p>
+          <h3>Arrivals (At Port)</h3>
+          <p style={numberStyle}>{data.arrivals}</p>
         </div>
 
         <div style={cardStyle}>
-          <h3>At Sea</h3>
-          <p style={numberStyle}>{atSea}</p>
+          <h3>Departures (At Sea)</h3>
+          <p style={numberStyle}>{data.departures}</p>
         </div>
 
         <div style={cardStyle}>
-          <h3>At Port</h3>
-          <p style={numberStyle}>{atPort}</p>
+          <h3>Avg Wait Time</h3>
+          <p style={numberStyle}>
+            {data.average_wait_time_hours} hrs
+          </p>
+        </div>
+
+        <div
+          style={{
+            ...cardStyle,
+            border:
+              data.congestion_level === "High"
+                ? "2px solid red"
+                : data.congestion_level === "Medium"
+                ? "2px solid orange"
+                : "2px solid green",
+          }}
+        >
+          <h3>Congestion Level</h3>
+          <p
+            style={{
+              ...numberStyle,
+              color:
+                data.congestion_level === "High"
+                  ? "red"
+                  : data.congestion_level === "Medium"
+                  ? "orange"
+                  : "green",
+            }}
+          >
+            {data.congestion_level}
+          </p>
         </div>
       </div>
     </div>
@@ -56,7 +81,7 @@ const cardStyle = {
   background: "#f1f5f9",
   padding: "20px",
   borderRadius: "8px",
-  width: "200px",
+  width: "220px",
   textAlign: "center",
 };
 
