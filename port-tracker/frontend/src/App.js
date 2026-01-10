@@ -8,6 +8,10 @@ import Layout from "./components/Layout";
 import MapView from "./pages/MapView";
 import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
+import Ports from "./pages/Ports";
+import Profile from "./pages/Profile";
+
+
 
 
 
@@ -18,6 +22,15 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        <Route
+          path="/profile"
+          element={
+            <Layout>
+              <Profile />
+            </Layout>
+          }
+        />
 
         <Route
           path="/dashboard"
@@ -40,6 +53,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/ports"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Ports />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
 
         <Route
           path="/map"

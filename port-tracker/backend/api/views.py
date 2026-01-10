@@ -4,9 +4,24 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
+from django.utils import timezone
+from rest_framework.exceptions import PermissionDenied
 
-from .models import User, Vessel, VesselSubscription, VesselAlert
-from .serializers import RegisterSerializer, UserSerializer, VesselSerializer
+from .models import (
+    User,
+    Vessel,
+    VesselSubscription,
+    VesselAlert,
+    Port,
+    PortVisit,
+)
+from .serializers import (
+    RegisterSerializer,
+    UserSerializer,
+    VesselSerializer,
+    PortSerializer,
+    PortCreateUpdateSerializer,
+)
 from .permissions import VesselPermission
 
 
@@ -29,7 +44,7 @@ class MeView(generics.RetrieveAPIView):
 
 
 # =========================
-# VESSEL CRUD + ALERT LOGIC
+# VESSEL CRUD + PORT LOGIC
 # =========================
 
 class VesselViewSet(viewsets.ModelViewSet):
@@ -37,28 +52,77 @@ class VesselViewSet(viewsets.ModelViewSet):
     serializer_class = VesselSerializer
     permission_classes = [VesselPermission]
 
-    # 🔍 Search by name or MMSI
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = ['name', 'mmsi']
-
-    # 🎯 Filter by status
-    filterset_fields = ['status']
+    filterset_fields = ['status', 'vessel_type']
 
     def perform_update(self, serializer):
         vessel = self.get_object()
-
-        # ✅ Capture old status BEFORE update
         old_status = vessel.status
 
-        # ✅ Save updated vessel
         updated_vessel = serializer.save()
 
-        # 🚨 Generate alert if status changed
+        # 🚢 ARRIVAL: at_sea → at_port
+        if old_status == "at_sea" and updated_vessel.status == "at_port":
+            PortVisit.objects.create(
+                vessel=updated_vessel,
+                port=updated_vessel.current_port,
+                arrival_time=timezone.now()
+            )
+            updated_vessel.heading = None
+            updated_vessel.save(update_fields=["heading"])
+
+        # 🚢 DEPARTURE: at_port → at_sea
+        if old_status == "at_port" and updated_vessel.status == "at_sea":
+            visit = PortVisit.objects.filter(
+                vessel=updated_vessel,
+                departure_time__isnull=True
+            ).order_by("-arrival_time").first()
+
+            if visit:
+                visit.departure_time = timezone.now()
+                visit.save()
+
+            updated_vessel.current_port = None
+            updated_vessel.save(update_fields=["current_port"])
+
+        # 🚨 Alert on status change
         if old_status != updated_vessel.status:
             VesselAlert.objects.create(
                 vessel=updated_vessel,
                 message=f"Vessel status changed to {updated_vessel.status}"
             )
+
+
+# =========================
+# PORT CRUD + ANALYTICS
+# =========================
+
+class PortViewSet(viewsets.ModelViewSet):
+    queryset = Port.objects.all()
+
+    def get_permissions(self):
+        return [IsAuthenticated()]
+
+    def get_serializer_class(self):
+        if self.request.method in ["POST", "PUT", "PATCH"]:
+            return PortCreateUpdateSerializer
+        return PortSerializer
+
+    def perform_create(self, serializer):
+        if self.request.user.role != "admin":
+            raise PermissionDenied("Only admin can create ports")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if self.request.user.role not in ["admin", "operator"]:
+            raise PermissionDenied("Only admin can update ports")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if self.request.user.role != "admin":
+            raise PermissionDenied("Only admin can delete ports")
+        instance.delete()
 
 
 # =========================
@@ -80,7 +144,6 @@ def subscribe_vessel(request, vessel_id):
         )
 
     try:
-        # Manual check to avoid DB crash
         exists = VesselSubscription.objects.filter(
             user=request.user,
             vessel=vessel
@@ -103,7 +166,6 @@ def subscribe_vessel(request, vessel_id):
         )
 
     except IntegrityError:
-        # Absolute fallback — never crash
         return Response(
             {"message": "Already subscribed"},
             status=status.HTTP_200_OK
@@ -117,49 +179,58 @@ def my_alerts(request):
         vessel__subscribers__user=request.user
     ).order_by("-created_at")
 
-    data = [
+    return Response([
         {
             "id": alert.id,
             "vessel": alert.vessel.name,
+            "vessel_id": alert.vessel.id,
             "message": alert.message,
             "created_at": alert.created_at,
         }
         for alert in alerts
-    ]
+    ])
 
-    return Response(data)
-
-from django.utils import timezone
-from datetime import timedelta
-from django.db.models import Avg
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from .models import Vessel
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def mark_alert_read(request, alert_id):
+    try:
+        alert = VesselAlert.objects.get(
+            id=alert_id,
+            vessel__subscribers__user=request.user
+        )
+        alert.is_read = True
+        alert.save()
+        return Response({"message": "Marked as read"})
+    except VesselAlert.DoesNotExist:
+        return Response({"message": "Not found"}, status=404)
+
+
+# =========================
+# DASHBOARD — PORT CONGESTION
+# =========================
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def port_congestion_metrics(request):
     now = timezone.now()
 
-    # Vessels currently at port
-    vessels_at_port = Vessel.objects.filter(status="at_port")
+    visits = PortVisit.objects.filter(departure_time__isnull=True)
 
-    arrivals = vessels_at_port.count()
+    arrivals = visits.count()
     departures = Vessel.objects.filter(status="at_sea").count()
 
-    # Simulated wait times (hours)
     wait_times = [
-        (now - v.last_updated).total_seconds() / 3600
-        for v in vessels_at_port
+        (now - v.arrival_time).total_seconds() / 3600
+        for v in visits
     ]
 
     avg_wait_time = round(
         sum(wait_times) / len(wait_times), 2
     ) if wait_times else 0
 
-    # Congestion logic
     if arrivals > 10 or avg_wait_time > 12:
         congestion_level = "High"
     elif arrivals > 5 or avg_wait_time > 6:

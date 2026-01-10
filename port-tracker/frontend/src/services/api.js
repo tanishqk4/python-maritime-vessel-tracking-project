@@ -4,28 +4,44 @@ const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
 });
 
-// ✅ Attach token
+// ==============================
+// REQUEST: attach JWT token
+// ==============================
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("access");
+
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+    };
   }
+
   return config;
 });
 
-// ⚠️ IMPORTANT FIX:
-// Only auto-logout on auth-related endpoints
+
+// ==============================
+// RESPONSE: handle auth expiry
+// ==============================
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (
       error.response &&
       error.response.status === 401 &&
-      error.config.url.includes("/auth/")
+      !error.config.url.includes("/auth/login") &&
+      !error.config.url.includes("/auth/register") &&
+      !error.config.url.includes("/auth/refresh")
     ) {
-      localStorage.clear();
+      // Token expired or invalid → logout
+      localStorage.removeItem("access");
+      localStorage.removeItem("refresh");
+
+      // Redirect to landing page
       window.location.href = "/";
     }
+
     return Promise.reject(error);
   }
 );

@@ -12,6 +12,8 @@ export default function VesselForm({ vessel, onSuccess, isEdit }) {
       heading: "",
       status: "at_sea",
       vessel_type: "cargo",
+      heading: 0,
+      current_port: null,
     }
   );
 

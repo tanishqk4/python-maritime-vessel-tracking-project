@@ -22,15 +22,28 @@ export default function Vessels() {
     const params = {};
     if (search) params.search = search;
     if (status) params.status = status;
-    if (type) params.vessel_type = type;
+    // if (type) params.vessel_type = type;
 
     const res = await api.get("/vessels/", { params });
     setVessels(res.data);
   };
 
   useEffect(() => {
+    api.get("/alerts/")
+      .then((res) => {
+        const ids = [
+          ...new Set(res.data.map(a => a.vessel_id))
+        ];
+        setSubscribedIds(ids);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     fetchVessels();
-  }, [refresh, search, status, type]);
+  }, [refresh, search, status]);
+
+
 
   const deleteVessel = async (id) => {
     if (!window.confirm("Delete this vessel?")) return;
