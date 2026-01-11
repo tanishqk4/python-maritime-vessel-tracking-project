@@ -11,6 +11,10 @@ from .views import (
     my_alerts,
     port_congestion_metrics,
     mark_alert_read,
+    arrivals_departures_trend,
+    vessel_type_distribution,
+    port_congestion_ranking,
+    dashboard_kpi_trends,
 )
 
 router = DefaultRouter()
@@ -35,5 +39,15 @@ urlpatterns = [
     path("dashboard/port-congestion/", port_congestion_metrics),
 
     path("alerts/<int:alert_id>/read/", mark_alert_read),
+
+    path("analytics/arrivals-departures/", arrivals_departures_trend),
+
+    path("analytics/vessel-type-distribution/", vessel_type_distribution),
+
+    path("analytics/port-congestion-ranking/", port_congestion_ranking),
+
+    path("analytics/kpi-trends/", dashboard_kpi_trends),
+
+
 
 ]

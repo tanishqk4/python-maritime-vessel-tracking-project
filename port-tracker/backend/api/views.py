@@ -25,6 +25,7 @@ from .serializers import (
 from .permissions import VesselPermission
 
 
+
 # =========================
 # AUTH
 # =========================
@@ -46,6 +47,46 @@ class MeView(generics.RetrieveAPIView):
 # =========================
 # VESSEL CRUD + PORT LOGIC
 # =========================
+from django.db.models import Count, Avg, F, ExpressionWrapper, DurationField
+from datetime import timedelta
+
+def check_port_congestion_alerts():
+    from .models import Port, PortVisit, VesselAlert
+
+    ports = Port.objects.all()
+
+    for port in ports:
+        docked = PortVisit.objects.filter(
+            port=port,
+            departure_time__isnull=True
+        )
+
+        docked_count = docked.count()
+
+        if docked_count == 0:
+            continue
+
+        avg_wait = docked.annotate(
+            wait_time=ExpressionWrapper(
+                timezone.now() - F("arrival_time"),
+                output_field=DurationField()
+            )
+        ).aggregate(avg=Avg("wait_time"))["avg"]
+
+        avg_wait_hours = avg_wait.total_seconds() / 3600 if avg_wait else 0
+
+        capacity_ratio = docked_count / port.docking_capacity if port.docking_capacity else 0
+
+        if capacity_ratio >= 0.8 or avg_wait_hours >= 12:
+            VesselAlert.objects.create(
+                vessel=docked.first().vessel,
+                message=(
+                    f"⚠️ Port congestion alert at {port.name}: "
+                    f"{docked_count}/{port.docking_capacity} vessels docked, "
+                    f"avg wait {round(avg_wait_hours, 1)} hrs"
+                )
+            )
+
 
 class VesselViewSet(viewsets.ModelViewSet):
     queryset = Vessel.objects.all()
@@ -92,6 +133,9 @@ class VesselViewSet(viewsets.ModelViewSet):
                 vessel=updated_vessel,
                 message=f"Vessel status changed to {updated_vessel.status}"
             )
+
+        check_port_congestion_alerts()
+
 
 
 # =========================
@@ -243,4 +287,141 @@ def port_congestion_metrics(request):
         "departures": departures,
         "average_wait_time_hours": avg_wait_time,
         "congestion_level": congestion_level,
+    })
+
+from django.db.models import Count
+from django.db.models.functions import TruncDate
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import PortVisit
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def arrivals_departures_trend(request):
+    arrivals = (
+        PortVisit.objects
+        .annotate(date=TruncDate("arrival_time"))
+        .values("date")
+        .annotate(count=Count("id"))
+        .order_by("date")
+    )
+
+    departures = (
+        PortVisit.objects
+        .filter(departure_time__isnull=False)
+        .annotate(date=TruncDate("departure_time"))
+        .values("date")
+        .annotate(count=Count("id"))
+        .order_by("date")
+    )
+
+    return Response({
+        "arrivals": list(arrivals),
+        "departures": list(departures),
+    })
+
+from django.db.models import Count
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Vessel
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def vessel_type_distribution(request):
+    data = (
+        Vessel.objects
+        .values("vessel_type")
+        .annotate(count=Count("id"))
+    )
+
+    return Response(list(data))
+
+from django.db.models import Count, Avg, F, ExpressionWrapper, DurationField
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.utils import timezone
+from .models import Port, PortVisit
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def port_congestion_ranking(request):
+    now = timezone.now()
+    data = []
+
+    for port in Port.objects.all():
+        visits = PortVisit.objects.filter(
+            port=port,
+            departure_time__isnull=True
+        )
+
+        docked = visits.count()
+        if docked == 0:
+            continue
+
+        avg_wait = visits.annotate(
+            wait=ExpressionWrapper(
+                now - F("arrival_time"),
+                output_field=DurationField()
+            )
+        ).aggregate(avg=Avg("wait"))["avg"]
+
+        avg_wait_hours = round(
+            avg_wait.total_seconds() / 3600, 2
+        ) if avg_wait else 0
+
+        congestion_score = round(
+            (docked / port.docking_capacity) * 100, 2
+        ) if port.docking_capacity else 0
+
+        data.append({
+            "port": port.name,
+            "country": port.country,
+            "docked": docked,
+            "avg_wait": avg_wait_hours,
+            "congestion_score": congestion_score,
+        })
+
+    data.sort(key=lambda x: x["congestion_score"], reverse=True)
+    return Response(data)
+
+from django.utils import timezone
+from datetime import timedelta
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Vessel, PortVisit
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def dashboard_kpi_trends(request):
+    now = timezone.now()
+    yesterday = now - timedelta(days=1)
+
+    today_arrivals = PortVisit.objects.filter(
+        arrival_time__date=now.date()
+    ).count()
+
+    yesterday_arrivals = PortVisit.objects.filter(
+        arrival_time__date=yesterday.date()
+    ).count()
+
+    today_departures = PortVisit.objects.filter(
+        departure_time__date=now.date()
+    ).count()
+
+    yesterday_departures = PortVisit.objects.filter(
+        departure_time__date=yesterday.date()
+    ).count()
+
+    def percent_change(today, yesterday):
+        if yesterday == 0:
+            return 0
+        return round(((today - yesterday) / yesterday) * 100, 1)
+
+    return Response({
+        "arrivals_change": percent_change(today_arrivals, yesterday_arrivals),
+        "departures_change": percent_change(today_departures, yesterday_departures),
     })
