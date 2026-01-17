@@ -167,10 +167,18 @@ class VesselSubscription(models.Model):
 # Vessel Alerts
 # -------------------
 class VesselAlert(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
     vessel = models.ForeignKey(
         Vessel,
         on_delete=models.CASCADE,
-        related_name="alerts"
+        related_name="alerts",
+        null=True,
+        blank=True
     )
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -213,3 +221,41 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.action} - {self.entity_type}"
+
+# AUDIT LOG MODEL
+
+class AuditLog(models.Model):
+    ACTION_CHOICES = [
+        ("login", "Login"),
+        ("logout", "Logout"),
+        ("admin_approve", "Admin Approved"),
+        ("admin_reject", "Admin Rejected"),
+        ("role_change", "Role Changed"),
+        ("user_toggle", "User Activated/Deactivated"),
+        ("broadcast", "Broadcast Sent"),
+    ]
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audit_logs"
+    )
+
+    action = models.CharField(
+        max_length=50,
+        choices=ACTION_CHOICES
+    )
+
+    target = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    description = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.action} by {self.user} at {self.created_at}"

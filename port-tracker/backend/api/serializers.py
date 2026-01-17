@@ -46,7 +46,25 @@ class UserSerializer(serializers.ModelSerializer):
             'role', 
             'is_approved', 
             'last_login',
+            'date_joined',
         ]
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import PermissionDenied
+
+class CustomTokenSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        self.user.last_login = timezone.now()
+        self.user.save(update_fields=["last_login"])
+
+        if self.user.role == "admin" and not self.user.is_approved:
+            raise PermissionDenied(
+                "Admin approval pending. Please wait for approval."
+            )
+
+        return data
 
 
 # =========================

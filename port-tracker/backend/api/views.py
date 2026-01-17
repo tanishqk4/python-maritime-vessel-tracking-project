@@ -9,6 +9,11 @@ from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
 from .permissions import AdminOnly
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenViewBase
+from .serializers import CustomTokenSerializer
+from django.db.models import Q
+
+
 
 from .models import (
     User,
@@ -17,6 +22,7 @@ from .models import (
     VesselAlert,
     Port,
     PortVisit,
+    AuditLog,
 )
 from .serializers import (
     RegisterSerializer,
@@ -43,6 +49,8 @@ class MeView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+class CustomTokenView(TokenViewBase):
+    serializer_class = CustomTokenSerializer
 
 
 # JWT CHECK (ADMIN APPROVAL)
@@ -87,9 +95,25 @@ def approve_admin(request, user_id):
     if action == "approve":
         user.is_approved = True
         user.save()
+
+        AuditLog.objects.create(
+            user=request.user,
+            action="admin_approve",
+            entity_type="User",
+            target=user.username,
+            description=f"Approved admin request for {user.username}"
+        )
+
         return Response({"message": "Admin approved"})
 
     if action == "reject":
+
+        AuditLog.objects.create(
+            user=request.user,
+            action="admin_reject",
+            target=user.username,
+            description=f"Rejected admin request for {user.username}"
+        )
         user.delete()
         return Response({"message": "Admin rejected"})
 
@@ -107,8 +131,15 @@ def change_role(request, user_id):
     if role not in ["admin", "operator", "analyst"]:
         return Response({"error": "Invalid role"}, status=400)
 
+    old_role = user.role
     user.role = role
     user.save()
+    AuditLog.objects.create(
+        user=request.user,
+        action="role_change",
+        target=user.username,
+        description=f"Changed role from {old_role} to {role} for {user.username}"
+    )
     return Response({"message": "Role updated"})
 
 @api_view(["GET"])
@@ -343,14 +374,16 @@ def subscribe_vessel(request, vessel_id):
 @permission_classes([IsAuthenticated])
 def my_alerts(request):
     alerts = VesselAlert.objects.filter(
-        vessel__subscribers__user=request.user
+        Q(vessel__subscribers__user=request.user) | 
+        Q(user=request.user)
+
     ).order_by("-created_at")
 
     return Response([
         {
             "id": alert.id,
-            "vessel": alert.vessel.name,
-            "vessel_id": alert.vessel.id,
+            "vessel": alert.vessel.name if alert.vessel else None,
+            "vessel_id": alert.vessel.id if alert.vessel else None,
             "message": alert.message,
             "created_at": alert.created_at,
         }
@@ -699,10 +732,23 @@ def broadcast_alert(request):
 
     if not message:
         return Response({"error": "Message required"}, status=400)
+    
+    users = User.objects.all() 
+    if target != "all":
+        users = users.filter(role=target)
 
-    VesselAlert.objects.create(
-        vessel=None,
-        message=f"[BROADCAST - {target.upper()}] {message}"
+    for user in users:
+        VesselAlert.objects.create(
+            user=user,
+            message=f"[BROADCAST - {target.upper()}] {message}"
+        )
+    
+
+    AuditLog.objects.create(
+        user=request.user,
+        action="broadcast",
+        target=target,
+        description=f"Broadcasted message to {target}"
     )
 
     return Response({"message": "Broadcast sent"})
@@ -716,6 +762,19 @@ def broadcast_alert(request):
 def admin_list_users(request):
     users = User.objects.all().order_by("-date_joined")
     return Response(UserSerializer(users, many=True).data)
+
+@api_view(["PATCH"])
+@permission_classes([AdminOnly])
+def toggle_user_active(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    user.is_active = not user.is_active
+    user.save(update_fields=["is_active"])
+
+    return Response({
+        "id": user.id,
+        "is_active": user.is_active
+    })
 
 
 # ==========================
@@ -756,3 +815,22 @@ def admin_toggle_user(request, user_id):
         "message": "User status updated",
         "is_active": user.is_active
     })
+
+@api_view(["GET"])
+@permission_classes([AdminOnly])
+def audit_logs(request):
+    logs = AuditLog.objects.select_related("user").order_by("-created_at")
+
+    data = [
+        {
+            "id": log.id,
+            "user": log.user.username if log.user else "System",
+            "action": log.action,
+            "target": log.target,
+            "description": log.description,
+            "created_at": log.created_at,
+        }
+        for log in logs
+    ]
+
+    return Response(data)

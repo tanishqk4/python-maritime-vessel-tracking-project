@@ -27,6 +27,16 @@ export default function AdminPanel() {
   /* ================= CONSTANTS ================= */
   const PAGE_SIZE = 10;
 
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditPage, setAuditPage] = useState(1);
+  const AUDIT_PER_PAGE = 10;
+
+  useEffect(() => {
+    api.get("/admin/audit-logs/")
+      .then(res => setAuditLogs(res.data))
+      .catch(() => {});
+  }, []);
+
   /* ================= LOAD DATA ================= */
   const loadOverview = () => {
     api
@@ -57,14 +67,17 @@ export default function AdminPanel() {
   }, []);
 
   /* ================= ACTIONS ================= */
-  const handleAdminAction = (id, action) => {
-    api
-      .post(`/admin/admin-approval/${id}/`, { action })
-      .then(() => {
-        loadOverview();
-        loadPendingAdmins();
-      })
-      .catch(() => alert("Action failed"));
+  const handleAdminAction = async (id, action) => {
+    try {
+      await api.post(`/admin/admin-approval/${id}/`, { action });
+
+      await loadOverview();
+      await loadPendingAdmins();
+
+    } catch (err) {
+      console.error(err);
+      alert("Action failed");
+    }
   };
 
   const sendBroadcast = () => {
@@ -108,6 +121,13 @@ export default function AdminPanel() {
   const userStart = (userPage - 1) * PAGE_SIZE;
   const paginatedUsers = users.slice(userStart, userStart + PAGE_SIZE);
   const userTotalPages = Math.ceil(users.length / PAGE_SIZE);
+  const auditStart = (auditPage - 1) * AUDIT_PER_PAGE;
+  const paginatedLogs = auditLogs.slice(
+    auditStart,
+    auditStart + AUDIT_PER_PAGE
+  );
+  const auditTotalPages = Math.ceil(auditLogs.length / AUDIT_PER_PAGE);
+
 
   if (loading) return <p>Loading admin panel...</p>;
   if (!data) return <p>Failed to load admin data</p>;
@@ -230,7 +250,7 @@ export default function AdminPanel() {
           </thead>
           <tbody>
             {paginatedUsers.map((u) => (
-              <tr key={u.id} style={{ opacity: u.is_active ? 1 : 0.5 }}>
+              <tr key={u.id} >
                 <td>{u.username}</td>
                 <td>{u.role}</td>
                 <td>{u.is_approved ? "Yes" : "No"}</td>
@@ -248,6 +268,85 @@ export default function AdminPanel() {
 
         <Pagination page={userPage} setPage={setUserPage} total={userTotalPages} />
       </Section>
+
+      {/* ================= AUDIT LOGS ================= */}
+      <div style={{ marginTop: "50px" }}>
+        <h3>Audit Logs</h3>
+
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: "12px",
+            padding: "16px",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            overflowX: "auto",
+          }}
+        >
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>Target</th>
+                <th>Description</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {paginatedLogs.length === 0 && (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
+                    No audit logs found
+                  </td>
+                </tr>
+              )}
+
+              {paginatedLogs.map(log => (
+                <tr key={log.id}>
+                  <td>{log.user}</td>
+                  <td>
+                    <span
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: "6px",
+                        background: "#eef2ff",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {log.action}
+                    </span>
+                  </td>
+                  <td>{log.target || "—"}</td>
+                  <td>{log.description}</td>
+                  <td>
+                    {new Date(log.created_at).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* PAGINATION */}
+        {auditTotalPages > 1 && (
+          <div style={{ marginTop: "12px" }}>
+            {Array.from({ length: auditTotalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setAuditPage(i + 1)}
+                style={{
+                  marginRight: "6px",
+                  fontWeight: auditPage === i + 1 ? "bold" : "normal",
+                }}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

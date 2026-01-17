@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from . import views
 from rest_framework_simplejwt.views import TokenViewBase
-
+from .serializers import CustomTokenSerializer
 
 
 from .views import (
@@ -33,6 +33,8 @@ from .views import (
     admin_list_users,
     admin_change_role,
     admin_toggle_user,
+    toggle_user_active,
+    CustomTokenView,
 )
 
 class CustomTokenView(TokenViewBase):
@@ -45,12 +47,10 @@ router.register(r"ports", PortViewSet, basename="port")
 urlpatterns = [
     # Auth
     path("auth/register/", RegisterView.as_view()),
-    path("auth/login/", TokenObtainPairView.as_view()),
+    path("auth/login/", CustomTokenView.as_view(),name="token_obtain_pair"),
     path("auth/refresh/", TokenRefreshView.as_view()),
     path("auth/me/", MeView.as_view()),
 
-
-    path("auth/login/", CustomTokenView.as_view()),
 
     # Router URLs
     path("", include(router.urls)),  
@@ -80,8 +80,6 @@ urlpatterns = [
 
     #admin panel
 
-    path("audit/logs/", audit_logs),
-
     path("admin/users/", list_users),
     path("admin/pending-admins/", pending_admin_requests),
     path("admin/admin-approval/<int:user_id>/", approve_admin),
@@ -94,6 +92,9 @@ urlpatterns = [
     path("admin/users/<int:user_id>/role/", admin_change_role),
     path("admin/users/<int:user_id>/toggle/", admin_toggle_user),
 
+    path("admin/audit-logs/", audit_logs),
+
+    path("admin/users/<int:user_id>/toggle/", toggle_user_active),
 
 
 ]
