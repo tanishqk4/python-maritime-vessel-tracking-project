@@ -16,6 +16,10 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DEBUG", "1") == "1"
 
+
+MARINESIA_API_KEY = os.getenv("MARINESIA_API_KEY")
+
+
 ALLOWED_HOSTS = ['*']
 
 # ------------------------------------------------------------------------------

@@ -17,9 +17,13 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'email',
-            'password', 'first_name',
-            'last_name', 'role'
+            'id', 
+            'username', 
+            'email',
+            'password', 
+            'first_name',
+            'last_name', 
+            'role' , 
         ]
 
     def create(self, validated_data):
@@ -34,8 +38,14 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'email',
-            'first_name', 'last_name', 'role'
+            'id', 
+            'username', 
+            'email',
+            'first_name', 
+            'last_name', 
+            'role', 
+            'is_approved', 
+            'last_login',
         ]
 
 
@@ -89,6 +99,8 @@ class PortSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "country",
+            "latitude",
+            "longitude",
             "docking_capacity",
             "ships_docked",
             "average_wait_time",

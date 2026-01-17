@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
@@ -6,6 +7,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
+from .permissions import AdminOnly
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import (
     User,
@@ -25,10 +28,8 @@ from .serializers import (
 from .permissions import VesselPermission
 
 
-
-# =========================
 # AUTH
-# =========================
+
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -42,6 +43,81 @@ class MeView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+# JWT CHECK (ADMIN APPROVAL)
+
+class CustomTokenSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        if self.user.role == "admin" and not self.user.is_approved:
+            raise PermissionDenied("Admin approval pending")
+
+        return data
+
+
+
+# ADMIN — USERS LIST
+
+@api_view(["GET"])
+@permission_classes([AdminOnly])
+def list_users(request):
+    users = User.objects.all()
+    return Response(UserSerializer(users, many=True).data)
+
+
+# ADMIN — PENDING ADMINS
+
+@api_view(["GET"])
+@permission_classes([AdminOnly])
+def pending_admin_requests(request):
+    users = User.objects.filter(role="admin", is_approved=False)
+    return Response(UserSerializer(users, many=True).data)
+
+
+# ADMIN — APPROVE / REJECT
+
+@api_view(["POST"])
+@permission_classes([AdminOnly])
+def approve_admin(request, user_id):
+    user = get_object_or_404(User, id=user_id, role="admin")
+    action = request.data.get("action")
+
+    if action == "approve":
+        user.is_approved = True
+        user.save()
+        return Response({"message": "Admin approved"})
+
+    if action == "reject":
+        user.delete()
+        return Response({"message": "Admin rejected"})
+
+    return Response({"error": "Invalid action"}, status=400)
+
+
+# ADMIN — CHANGE USER ROLE
+
+@api_view(["PATCH"])
+@permission_classes([AdminOnly])
+def change_role(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    role = request.data.get("role")
+
+    if role not in ["admin", "operator", "analyst"]:
+        return Response({"error": "Invalid role"}, status=400)
+
+    user.role = role
+    user.save()
+    return Response({"message": "Role updated"})
+
+@api_view(["GET"])
+@permission_classes([AdminOnly])
+def list_users(request):
+    users = User.objects.all()
+    return Response(UserSerializer(users, many=True).data)
+
+
 
 
 # =========================
@@ -134,7 +210,33 @@ class VesselViewSet(viewsets.ModelViewSet):
                 message=f"Vessel status changed to {updated_vessel.status}"
             )
 
+            from api.services.audit_logger import log_action
+
+            log_action(
+                user=self.request.user,
+                action="UPDATE_STATUS",
+                entity_type="Vessel",
+                entity_id=updated_vessel.id,
+                description=f"Status changed from {old_status} to {updated_vessel.status}"
+            )
+
+
         check_port_congestion_alerts()
+
+        try:
+            from api.services.alert_runner import run_alerts
+        except ImportError:
+            def run_alerts(vessel):
+                return None
+
+        try:
+            from api.services.weather_alerts import check_weather_risk
+        except ImportError:
+            def check_weather_risk(vessel):
+                return None
+
+        run_alerts(isinstance)
+
 
 
 
@@ -157,16 +259,37 @@ class PortViewSet(viewsets.ModelViewSet):
         if self.request.user.role != "admin":
             raise PermissionDenied("Only admin can create ports")
         serializer.save()
+        log_action(
+            self.request.user,
+            "CREATE",
+            "Port",
+            serializer.instance.id,
+            f"Port {serializer.instance.name} created"
+        )
 
     def perform_update(self, serializer):
         if self.request.user.role not in ["admin", "operator"]:
             raise PermissionDenied("Only admin can update ports")
         serializer.save()
+        log_action(
+            self.request.user,
+            "UPDATE",
+            "Port",
+            serializer.instance.id,
+            f"Port {serializer.instance.name} updated"
+        )
 
     def perform_destroy(self, instance):
         if self.request.user.role != "admin":
             raise PermissionDenied("Only admin can delete ports")
         instance.delete()
+        log_action(
+            self.request.user,
+            "DELETE",
+            "Port",
+            instance.id,
+            f"Port {instance.name} deleted"
+        )
 
 
 # =========================
@@ -424,4 +547,212 @@ def dashboard_kpi_trends(request):
     return Response({
         "arrivals_change": percent_change(today_arrivals, yesterday_arrivals),
         "departures_change": percent_change(today_departures, yesterday_departures),
+    })
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Vessel
+from .services.marinesia_service import fetch_live_vessels
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def sync_live_vessels(request):
+    live_vessels = fetch_live_vessels()
+    updated = 0
+
+    for v in live_vessels:
+        mmsi = v.get("mmsi")
+        if not mmsi:
+            continue
+
+        Vessel.objects.update_or_create(
+            mmsi=mmsi,
+            defaults={
+                "name": v.get("name", "Unknown"),
+                "latitude": v.get("latitude"),
+                "longitude": v.get("longitude"),
+                "speed": v.get("speed", 0),
+                "heading": v.get("heading"),
+                "status": "at_sea",
+            }
+        )
+        updated += 1
+
+    return Response({
+        "message": "Live vessels synced",
+        "count": updated,
+    })
+
+from api.services.noaa_weather import check_weather
+from api.models import Vessel
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def weather_zones(request):
+    zones = []
+
+    vessels = Vessel.objects.filter(
+        latitude__isnull=False,
+        longitude__isnull=False
+    )
+
+    for v in vessels:
+        alert = check_weather(v.latitude, v.longitude)
+        if alert and alert.get("radius"):
+            zones.append({
+                "center": [v.latitude, v.longitude],
+                "radius": int(alert.get("radius", 150)),
+                "severity": alert["severity"],
+                "message": alert["message"],
+                "vessel": v.name,
+            })
+
+    return Response(zones)
+
+# def weather_zones(request):
+#     zones = []
+
+#     # 🔴 DEMO WEATHER ALERT — MUMBAI
+#     zones.append({
+#         "center": [18.94, 72.83],   # Mumbai
+#         "radius": 120,              # km
+#         "severity": "High",
+#         "message": "Severe Thunderstorm (DEMO)",
+#         "vessel": "Demo Zone - Mumbai",
+#     })
+
+#     return Response(zones)
+
+from api.models import VesselPositionHistory
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def vessel_history(request, vessel_id):
+    qs = VesselPositionHistory.objects.filter(
+        vessel_id=vessel_id
+    ).order_by("recorded_at")
+
+    return Response([
+        {
+            "lat": p.latitude,
+            "lng": p.longitude,
+            "speed": p.speed,
+            "time": p.recorded_at,
+        }
+        for p in qs
+    ])
+@api_view(["GET"])
+@permission_classes([AdminOnly])
+def audit_logs(request):
+    logs = AuditLog.objects.all().order_by("-created_at")
+    return Response(AuditLogSerializer(logs, many=True).data)
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Count
+from .models import User, Vessel, Port
+from rest_framework.exceptions import PermissionDenied
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def admin_overview(request):
+    # 🔒 Admin only
+    if request.user.role != "admin":
+        raise PermissionDenied("Admins only")
+
+    total_users = User.objects.count()
+    pending_admin_requests = User.objects.filter(
+        role="admin",
+        is_approved=False
+    ).count()
+
+    total_vessels = Vessel.objects.count()
+    total_ports = Port.objects.count()
+
+    users_by_role = (
+        User.objects.values("role")
+        .annotate(count=Count("id"))
+    )
+
+    return Response({
+        "total_users": total_users,
+        "pending_admin_requests": pending_admin_requests,
+        "total_vessels": total_vessels,
+        "total_ports": total_ports,
+        "users_by_role": {
+            u["role"]: u["count"] for u in users_by_role
+        }
+    })
+@api_view(["POST"])
+@permission_classes([AdminOnly])
+def broadcast_alert(request):
+    message = request.data.get("message")
+    target = request.data.get("target", "all")
+
+    if not message:
+        return Response({"error": "Message required"}, status=400)
+
+    VesselAlert.objects.create(
+        vessel=None,
+        message=f"[BROADCAST - {target.upper()}] {message}"
+    )
+
+    return Response({"message": "Broadcast sent"})
+
+
+# ==========================
+# LIST USERS (ADMIN)
+# ==========================
+@api_view(["GET"])
+@permission_classes([AdminOnly])
+def admin_list_users(request):
+    users = User.objects.all().order_by("-date_joined")
+    return Response(UserSerializer(users, many=True).data)
+
+
+# ==========================
+# CHANGE ROLE
+# ==========================
+@api_view(["PATCH"])
+@permission_classes([AdminOnly])
+def admin_change_role(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    if user == request.user:
+        return Response({"error": "Cannot change your own role"}, status=400)
+
+    role = request.data.get("role")
+    if role not in ["admin", "operator", "analyst"]:
+        return Response({"error": "Invalid role"}, status=400)
+
+    user.role = role
+    user.save()
+    return Response({"message": "Role updated"})
+
+
+# ==========================
+# DEACTIVATE USER
+# ==========================
+@api_view(["PATCH"])
+@permission_classes([AdminOnly])
+def admin_toggle_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    if user == request.user:
+        return Response({"error": "Cannot deactivate yourself"}, status=400)
+
+    user.is_active = not user.is_active
+    user.save()
+
+    return Response({
+        "message": "User status updated",
+        "is_active": user.is_active
     })

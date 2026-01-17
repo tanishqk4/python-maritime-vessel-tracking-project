@@ -28,3 +28,12 @@ class VesselPermission(BasePermission):
             return request.method in ["GET", "PUT", "PATCH"]
 
         return False
+
+class AdminOnly(BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user
+            and request.user.is_authenticated
+            and request.user.role == "admin"
+            and getattr(request.user, "is_approved", True)
+        )

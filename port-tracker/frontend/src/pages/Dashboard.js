@@ -219,11 +219,11 @@ export default function Dashboard() {
         <table style={tableStyle}>
           <thead>
             <tr>
-              <th>Port</th>
-              <th>Country</th>
-              <th>Docked Ships</th>
-              <th>Avg Wait (hrs)</th>
-              <th>Congestion %</th>
+              <th style={thStyle}>Port</th>
+              <th style={thStyle}>Country</th>
+              <th style={thStyle}>Docked Ships</th>
+              <th style={thStyle}>Avg Wait (hrs)</th>
+              <th style={thStyle}>Congestion %</th>
             </tr>
           </thead>
           <tbody>
@@ -263,19 +263,22 @@ function Section({ title, children }) {
    STYLES
 ======================= */
 const kpiContainer = {
-  display: "flex",
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
   gap: "20px",
   marginTop: "20px",
-  flexWrap: "wrap",
 };
 
+
 const cardStyle = {
-  background: "#f1f5f9",
+  background: "#ffffff",
   padding: "20px",
-  borderRadius: "8px",
-  width: "220px",
+  borderRadius: "12px",
   textAlign: "center",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+  transition: "transform 0.2s ease",
 };
+
 
 const numberStyle = {
   fontSize: "32px",
@@ -284,14 +287,35 @@ const numberStyle = {
 
 const chartBox = {
   width: "100%",
-  height: "300px",
-  background: "#f8fafc",
+  height: "320px",
+  background: "#ffffff",
   borderRadius: "12px",
-  padding: "16px",
+  padding: "20px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
 };
+
 
 const tableStyle = {
   width: "100%",
   marginTop: "12px",
   borderCollapse: "collapse",
+  background: "#ffffff",
+  borderRadius: "10px",
+  overflow: "hidden",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
 };
+
+const thStyle = {
+  textAlign: "left",
+  padding: "12px",
+  background: "#f1f5f9",
+  fontSize: "13px",
+  fontWeight: 600,
+};
+
+const tdStyle = {
+  padding: "12px",
+  fontSize: "13px",
+  borderBottom: "1px solid #e5e7eb",
+};
+

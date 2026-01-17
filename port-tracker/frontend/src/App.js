@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
 import Ports from "./pages/Ports";
 import Profile from "./pages/Profile";
+import AdminPanel from "./pages/AdminPanel";
 
 
 
@@ -75,6 +76,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin-panel"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AdminPanel />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
 
       </Routes>
     </BrowserRouter>

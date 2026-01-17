@@ -18,6 +18,10 @@ export default function Vessels() {
   // 🔔 Subscriptions (frontend-only state)
   const [subscribedIds, setSubscribedIds] = useState([]);
 
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+
+
   const fetchVessels = async () => {
     const params = {};
     if (search) params.search = search;
@@ -43,7 +47,10 @@ export default function Vessels() {
     fetchVessels();
   }, [refresh, search, status]);
 
-
+  const paginatedVessels = vessels.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
 
   const deleteVessel = async (id) => {
     if (!window.confirm("Delete this vessel?")) return;
@@ -117,6 +124,29 @@ export default function Vessels() {
         </div>
       )}
 
+      {/* ✏️ EDIT VESSEL (TOP) */}
+      {editing && (
+        <div
+          style={{
+            marginBottom: "20px",
+            padding: "16px",
+            borderRadius: "12px",
+            background: "#f8fafc",
+            border: "1px solid #e5e7eb",
+          }}
+        >
+          <VesselForm
+            vessel={editing}
+            isEdit
+            onSuccess={() => {
+              setEditing(null);
+              setRefresh(!refresh);
+            }}
+          />
+        </div>
+      )}
+
+
       {/* 📊 Vessel Table */}
       <div style={{ overflowX: "auto" }}>
         <table>
@@ -132,7 +162,7 @@ export default function Vessels() {
           </thead>
 
           <tbody>
-            {vessels.map((v) => (
+            {paginatedVessels.map((v) => (
               <tr key={v.id}>
                 <td>{v.name}</td>
                 <td>{v.mmsi}</td>
@@ -177,21 +207,37 @@ export default function Vessels() {
             ))}
           </tbody>
         </table>
+
+        {/* PAGINATION */}
+        <div
+          style={{
+            marginTop: "16px",
+            display: "flex",
+            justifyContent: "center",
+            gap: "12px",
+            alignItems: "center",
+          }}
+        >
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
+            Prev
+          </button>
+          <span style={{ fontWeight: 500 }}>
+            Page {page}
+          </span>
+
+          <button
+            disabled={page * pageSize >= vessels.length}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </button>
+        </div>
       </div>
 
-      {/* ✏️ Edit Vessel Form */}
-      {editing && (
-        <div style={{ marginTop: "20px" }}>
-          <VesselForm
-            vessel={editing}
-            isEdit
-            onSuccess={() => {
-              setEditing(null);
-              setRefresh(!refresh);
-            }}
-          />
-        </div>
-      )}
+      
     </div>
   );
 }

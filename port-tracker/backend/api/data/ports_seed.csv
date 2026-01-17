@@ -1,0 +1,94 @@
+name,country,latitude,longitude,docking_capacity
+Mumbai,India,19.0760,72.8777,60
+Chennai,India,13.0827,80.2707,55
+Kolkata,India,22.5726,88.3639,50
+Cochin,India,9.9312,76.2673,45
+Visakhapatnam,India,17.6868,83.2185,50
+Singapore,Singapore,1.3521,103.8198,120
+Shanghai,China,31.2304,121.4737,150
+Ningbo,China,29.8683,121.5440,130
+Busan,South Korea,35.1796,129.0756,90
+Yokohama,Japan,35.4437,139.6380,85
+Hong Kong,China,22.3193,114.1694,100
+Rotterdam,Netherlands,51.9244,4.4777,140
+Antwerp,Belgium,51.2194,4.4025,110
+Hamburg,Germany,53.5511,9.9937,95
+Los Angeles,USA,33.7405,-118.2775,120
+Long Beach,USA,33.7542,-118.2165,115
+New York,USA,40.7128,-74.0060,100
+Savannah,USA,32.0809,-81.0912,90
+Houston,USA,29.7604,-95.3698,95
+Dubai,UAE,25.2048,55.2708,110
+Jebel Ali,UAE,25.0110,55.0612,130
+Jeddah,Saudi Arabia,21.4858,39.1925,85
+Dammam,Saudi Arabia,26.4207,50.0888,80
+Durban,South Africa,-29.8587,31.0218,75
+Cape Town,South Africa,-33.9249,18.4241,70
+Santos,Brazil,-23.9608,-46.3336,95
+Rio de Janeiro,Brazil,-22.9068,-43.1729,80
+Buenos Aires,Argentina,-34.6037,-58.3816,85
+Callao,Peru,-12.0464,-77.0428,70
+Valparaiso,Chile,-33.0472,-71.6127,65
+Sydney,Australia,-33.8688,151.2093,90
+Melbourne,Australia,-37.8136,144.9631,95
+Brisbane,Australia,-27.4698,153.0251,75
+Auckland,New Zealand,-36.8485,174.7633,70
+Vancouver,Canada,49.2827,-123.1207,85
+Montreal,Canada,45.5017,-73.5673,80
+London,UK,51.5074,-0.1278,75
+Felixstowe,UK,51.9636,1.3510,90
+Le Havre,France,49.4944,0.1079,85
+Marseille,France,43.2965,5.3698,80
+Genoa,Italy,44.4056,8.9463,85
+Barcelona,Spain,41.3851,2.1734,90
+Valencia,Spain,39.4699,-0.3763,95
+Piraeus,Greece,37.9429,23.6465,100
+Istanbul,Turkey,41.0082,28.9784,90
+Alexandria,Egypt,31.2001,29.9187,80
+Tuticorin,India,8.7642,78.1348,40
+Paradip,India,20.3166,86.6114,45
+Haldia,India,22.0253,88.0583,40
+Kandla,India,23.0339,70.2194,55
+Mundra,India,22.8390,69.7219,65
+Karachi,Pakistan,24.8607,67.0011,70
+Port Qasim,Pakistan,24.7783,67.3527,60
+Colombo,Sri Lanka,6.9271,79.8612,75
+Chittagong,Bangladesh,22.3569,91.7832,65
+Yangon,Myanmar,16.8409,96.1735,55
+Jakarta,Indonesia,-6.2088,106.8456,80
+Surabaya,Indonesia,-7.2575,112.7521,75
+Manila,Philippines,14.5995,120.9842,70
+Ho Chi Minh City,Vietnam,10.8231,106.6297,75
+Hai Phong,Vietnam,20.8449,106.6881,65
+Bangkok,Thailand,13.7563,100.5018,70
+Laem Chabang,Thailand,13.0827,100.8833,85
+Port Klang,Malaysia,3.0039,101.4000,90
+Penang,Malaysia,5.4141,100.3288,60
+Tanjung Priok,Indonesia,-6.1045,106.8800,100
+Doha,Qatar,25.2854,51.5310,65
+Kuwait Port,Kuwait,29.3759,47.9774,60
+Muscat,Oman,23.5880,58.3829,55
+Salalah,Oman,17.0190,54.0897,70
+Bandar Abbas,Iran,27.1832,56.2666,80
+Basra,Iraq,30.5085,47.7804,50
+Suez,Egypt,29.9668,32.5498,90
+Port Said,Egypt,31.2653,32.3019,85
+Casablanca,Morocco,33.5731,-7.5898,75
+Tangier,Morocco,35.7595,-5.8340,80
+Lagos,Nigeria,6.5244,3.3792,70
+Tema,Ghana,5.6697,-0.0166,65
+Abidjan,Ivory Coast,5.3600,-4.0083,70
+Dakar,Senegal,14.7167,-17.4677,60
+Mombasa,Kenya,-4.0435,39.6682,75
+Dar es Salaam,Tanzania,-6.7924,39.2083,70
+Maputo,Mozambique,-25.9655,32.5832,60
+Walvis Bay,Namibia,-22.9576,14.5053,55
+Luanda,Angola,-8.8390,13.2894,65
+San Juan,Puerto Rico,18.4655,-66.1057,60
+Kingston,Jamaica,17.9712,-76.7936,55
+Panama City,Panama,8.9824,-79.5199,85
+Balboa,Panama,8.9517,-79.5656,90
+Cartagena,Colombia,10.3910,-75.4794,80
+Barranquilla,Colombia,10.9639,-74.7964,65
+Guayaquil,Ecuador,-2.1709,-79.9224,75
+Montevideo,Uruguay,-34.9011,-56.1645,70

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
@@ -9,21 +9,61 @@ export default function Layout({ children }) {
 
   const [alerts, setAlerts] = useState([]);
   const [showAlerts, setShowAlerts] = useState(false);
+  const isActive = (path) => location.pathname.startsWith(path);
 
+
+  const alertRef = useRef(null);
+
+  const READ_ALERTS_KEY = user
+    ? `read_alerts_${user.id}`
+    : null;
+
+  /* =======================
+     FETCH ALERTS (POLLING)
+  ======================= */
   useEffect(() => {
+    if (!user) return;
+
     const fetchAlerts = () => {
-      api
-        .get("/alerts/")
-        .then((res) => setAlerts(res.data))
+      api.get("/alerts/")
+        .then((res) => {
+          const readIds = JSON.parse(
+            localStorage.getItem(READ_ALERTS_KEY) || "[]"
+          );
+
+          const normalized = res.data.map((a) => ({
+            ...a,
+            is_read: readIds.includes(a.id),
+          }));
+
+          setAlerts(normalized);
+        })
         .catch(() => {});
     };
-    fetchAlerts(); // initial load
 
-    const interval = setInterval(fetchAlerts, 15000); // 15 sec
-
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user, READ_ALERTS_KEY]);
 
+  /* =======================
+     CLOSE ON OUTSIDE CLICK
+  ======================= */
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (alertRef.current && !alertRef.current.contains(e.target)) {
+        setShowAlerts(false);
+      }
+    };
+
+    if (showAlerts) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showAlerts]);
 
   const unreadCount = alerts.filter((a) => !a.is_read).length;
 
@@ -34,9 +74,6 @@ export default function Layout({ children }) {
     localStorage.clear();
     window.location.href = "/login";
   };
-
-  const isActive = (path) =>
-    location.pathname === path ? "active" : "";
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -57,7 +94,6 @@ export default function Layout({ children }) {
         <h2 style={{ color: "#fff", marginBottom: "16px" }}>
           🚢 Port Tracker
         </h2>
-        
 
         {/* PROFILE + ALERT */}
         <div
@@ -106,10 +142,13 @@ export default function Layout({ children }) {
           </Link>
 
           {/* ALERT BELL */}
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative" }} ref={alertRef}>
             <span
-              style={{ cursor: "pointer" }}
-              onClick={() => setShowAlerts(!showAlerts)}
+              style={{ cursor: "pointer", fontSize: "18px" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAlerts((p) => !p);
+              }}
             >
               🔔
             </span>
@@ -131,62 +170,84 @@ export default function Layout({ children }) {
               </span>
             )}
 
-            {/* ALERT DROPDOWN */}
             {showAlerts && (
               <div
                 style={{
-                  position: "absolute",
-                  right: 0,
-                  top: "30px",
-                  width: "280px",
+                  position: "fixed",
+                  left: "260px",
+                  top: "80px",
+                  width: "340px",
                   background: "#fff",
                   color: "#000",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                  zIndex: 1000,
-                  maxHeight: "300px",
+                  borderRadius: "12px",
+                  boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
+                  zIndex: 2000,
+                  maxHeight: "420px",
                   overflowY: "auto",
                 }}
               >
-                {alerts.length === 0 ? (
+                <div
+                  style={{
+                    padding: "12px",
+                    borderBottom: "1px solid #e5e7eb",
+                    fontWeight: 600,
+                  }}
+                >
+                  Notifications
+                </div>
+
+                {alerts.length === 0 && (
                   <div style={{ padding: "12px" }}>No alerts</div>
-                ) : (
-                  alerts.map((a) => (
-                    <div
-                      key={a.id}
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #e5e7eb",
-                        background: a.is_read
-                          ? "#f9fafb"
-                          : "#eef2ff",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => {
-                        api.post(`/alerts/${a.id}/read/`);
-                        setAlerts((prev) =>
-                          prev.map((x) =>
-                            x.id === a.id
-                              ? { ...x, is_read: true }
-                              : x
-                          )
+                )}
+
+                {alerts.map((a) => (
+                  <div
+                    key={a.id}
+                    style={{
+                      padding: "12px",
+                      borderBottom: "1px solid #f1f5f9",
+                      background: a.is_read ? "#fff" : "#eef2ff",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => {
+                      const readIds = JSON.parse(
+                        localStorage.getItem(READ_ALERTS_KEY) || "[]"
+                      );
+
+                      if (!readIds.includes(a.id)) {
+                        readIds.push(a.id);
+                        localStorage.setItem(
+                          READ_ALERTS_KEY,
+                          JSON.stringify(readIds)
                         );
+                      }
+
+                      setAlerts((prev) =>
+                        prev.map((x) =>
+                          x.id === a.id
+                            ? { ...x, is_read: true }
+                            : x
+                        )
+                      );
+                    }}
+                  >
+                    <div style={{ fontSize: "13px", fontWeight: 600 }}>
+                      {a.vessel}
+                    </div>
+                    <div style={{ fontSize: "12px" }}>
+                      {a.message}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        color: "#6b7280",
+                        marginTop: "4px",
                       }}
                     >
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {a.vessel}
-                      </div>
-                      <div style={{ fontSize: "12px" }}>
-                        {a.message}
-                      </div>
+                      {new Date(a.created_at).toLocaleString()}
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -195,23 +256,22 @@ export default function Layout({ children }) {
         {/* NAV */}
         <nav style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           {(user.role === "admin" || user.role === "analyst") && (
-            <Link to="/dashboard" style={navStyle}>
-              Dashboard
-            </Link>
+            <Link to="/dashboard" style={navStyle(isActive("/dashboard"))}>Dashboard</Link>
           )}
-
           {(user.role === "admin" || user.role === "operator") && (
-            <Link to="/vessels" style={navStyle}>
-              Vessels
+            <Link to="/vessels" style={navStyle(isActive("/vessels"))}>Vessels</Link>
+          )}
+          <Link to="/map" style={navStyle(isActive("/map"))}>Map</Link>
+          <Link to="/ports" style={navStyle(isActive("/ports"))}>Ports</Link>
+
+          {(user.role === "admin" && user.is_approved) && (
+            <Link 
+              to="/admin-panel" 
+              style={navStyle(isActive("/admin-panel"))}>
+              Admin Panel
             </Link>
           )}
 
-          <Link to="/map" style={navStyle}>
-            Map
-          </Link>
-          <Link to="/ports" style={navStyle}>
-            Ports
-          </Link>
 
           <button
             onClick={logout}
@@ -250,10 +310,11 @@ export default function Layout({ children }) {
   );
 }
 
-const navStyle = {
+const navStyle = (active) => ({
   textDecoration: "none",
   padding: "10px 14px",
   borderRadius: "8px",
-  color: "#e5e7eb",
-  fontWeight: "500",
-};
+  color: active ? "#ffffff" : "#e5e7eb",
+  background: active ? "#2563eb" : "transparent",
+  fontWeight: active ? "600" : "500",
+});

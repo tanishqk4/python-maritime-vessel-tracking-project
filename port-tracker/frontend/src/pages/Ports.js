@@ -8,12 +8,22 @@ export default function Ports() {
   const [ports, setPorts] = useState([]);
   const [editing, setEditing] = useState(null);
   const [refresh, setRefresh] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+
 
   useEffect(() => {
     api.get("/ports/")
       .then(res => setPorts(res.data))
       .catch(() => setPorts([]));
   }, [refresh]);
+
+  
+  const paginatedPorts = ports.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
+
 
   const deletePort = async (id) => {
     if (!window.confirm("Delete this port?")) return;
@@ -33,6 +43,27 @@ export default function Ports() {
         <PortForm onSuccess={() => setRefresh(!refresh)} />
       )}
 
+      {/* ✏️ EDIT PORT (TOP) */}
+      {editing && (
+        <div
+          style={{
+            marginBottom: "20px",
+            padding: "16px",
+            borderRadius: "12px",
+            background: "#f8fafc",
+            border: "1px solid #e5e7eb",
+          }}
+        >
+          <PortForm
+            port={editing}
+            onSuccess={() => {
+              setEditing(null);
+              setRefresh(!refresh);
+            }}
+          />
+        </div>
+      )}
+
       <table>
         <thead>
           <tr>
@@ -47,7 +78,7 @@ export default function Ports() {
         </thead>
 
         <tbody>
-          {ports.map((p) => (
+          {paginatedPorts.map((p) => (
             <tr key={p.id}>
               <td>{p.name}</td>
               <td>{p.country}</td>
@@ -69,15 +100,24 @@ export default function Ports() {
         </tbody>
       </table>
 
-      {editing && (
-        <PortForm
-          port={editing}
-          onSuccess={() => {
-            setEditing(null);
-            setRefresh(!refresh);
-          }}
-        />
-      )}
+      <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
+        <button
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Prev
+        </button>
+        <span>Page {page}</span>
+
+        <button
+          disabled={page * pageSize >= ports.length} 
+          onClick={() => setPage(page + 1)}
+        >
+          Next
+        </button>
+      </div>
+
+      
     </div>
   );
 }

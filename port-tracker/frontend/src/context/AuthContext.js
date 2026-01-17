@@ -19,7 +19,16 @@ export function AuthProvider({ children }) {
 
       try {
         const res = await api.get("/auth/me/");
-        setUser(res.data);
+        setUser({
+          id: res.data.id,
+          username: res.data.username,
+          email: res.data.email,
+          first_name: res.data.first_name,
+          last_name: res.data.last_name,
+          role: res.data.role,
+          is_approved: res.data.is_approved,
+          last_login: res.data.last_login
+        });
         localStorage.setItem("user", JSON.stringify(res.data));
       } catch {
         localStorage.clear();
