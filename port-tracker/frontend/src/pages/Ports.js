@@ -89,9 +89,32 @@ export default function Ports() {
 
               {["admin", "operator"].includes(user?.role) && (
                 <td>
-                  <button onClick={() => setEditing(p)}>Edit</button>
+                  <button onClick={() => setEditing(p)}
+                    style = {{
+                      marginRight: "10px",
+                      background: "#16a34a",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "6px 12px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Edit
+                  </button>
                   {user?.role === "admin" && (
-                    <button onClick={() => deletePort(p.id)}>Delete</button>
+                    <button onClick={() => deletePort(p.id)}
+                      style={{
+                        background: "#dc2626",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "6px",
+                        padding: "6px 12px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Delete
+                    </button>
                   )}
                 </td>
               )}

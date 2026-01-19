@@ -2,6 +2,10 @@ import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
+import logo from "../assets/logo.png";
+import "../styles/auth.css";
+
+
 
 export default function Login() {
   const { user, setUser } = useContext(AuthContext);
@@ -11,7 +15,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // 🔁 If already logged in, go to dashboard
   useEffect(() => {
     if (user) {
       navigate("/dashboard", { replace: true });
@@ -23,24 +26,18 @@ export default function Login() {
     setError("");
 
     try {
-      // 1️⃣ Login → get tokens
       const res = await api.post("/auth/login/", {
         username,
         password,
       });
 
-      // 2️⃣ Store tokens
       localStorage.setItem("access", res.data.access);
       localStorage.setItem("refresh", res.data.refresh);
 
-      // 3️⃣ Fetch user
       const userRes = await api.get("/auth/me/");
       localStorage.setItem("user", JSON.stringify(userRes.data));
 
-      // 4️⃣ Update context (THIS IS KEY)
       setUser(userRes.data);
-
-      // 5️⃣ Navigate (NO PAGE RELOAD)
       navigate("/dashboard", { replace: true });
     } catch {
       setError("Invalid username or password");
@@ -48,17 +45,8 @@ export default function Login() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #0f172a, #020617)",
-      }}
-    >
-      <form
-        onSubmit={handleLogin}
+    <div className="auth-container">
+      <div
         style={{
           background: "#ffffff",
           padding: "32px",
@@ -67,47 +55,81 @@ export default function Login() {
           boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
         }}
       >
-        <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
-          Login
-        </h2>
-
-        {error && (
-          <p style={{ color: "red", marginBottom: "12px" }}>{error}</p>
-        )}
-
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ width: "100%", padding: "10px", marginBottom: "16px" }}
-        />
-
-        <button
-          type="submit"
+       
+        <div
           style={{
-            width: "100%",
-            padding: "10px",
-            background: "#2563eb",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "12px",
+            marginBottom: "20px",
           }}
         >
-          Login
-        </button>
-      </form>
+          <img
+            src={logo}
+            alt="Port Tracker"
+            style={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "50%",
+              objectFit: "cover",
+            }}
+          />
+          <h2 style={{ margin: 0 }}>Port Tracker</h2>
+        </div>
+
+        <form onSubmit={handleLogin}>
+          <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
+            Login
+          </h2>
+
+          {error && (
+            <p style={{ color: "red", marginBottom: "12px" }}>{error}</p>
+          )}
+
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{ width: "100%", padding: "10px", marginBottom: "16px" }}
+          />
+
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              padding: "10px",
+              background: "#032e5a",
+              color: "#fff",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+            }}
+          >
+            Login
+          </button>
+
+          <p className="auth-footer">
+            New user?{" "}
+            <span
+              onClick={() => navigate("/register")}
+            >
+              Register here
+            </span>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

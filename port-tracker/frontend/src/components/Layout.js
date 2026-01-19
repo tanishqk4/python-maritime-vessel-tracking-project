@@ -91,9 +91,44 @@ export default function Layout({ children }) {
           overflowY: "auto",
         }}
       >
-        <h2 style={{ color: "#fff", marginBottom: "16px" }}>
-          🚢 Port Tracker
-        </h2>
+        <div style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              gap: "10px", 
+              marginBottom: "16px"
+            }}
+          >
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "50%",
+                background: "#0f172a",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "2px solid #334155"
+              }}
+            >
+            <img
+              src={require("../assets/logo.png")}
+              alt="Logo"
+              style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }}
+            />
+            </div>
+          <span
+            style={{
+              fontSize: "20px",
+              fontWeight: "700",
+              color: "#ffffff",
+              lineHeight: "1",
+            }}
+          >
+            Port Tracker
+          </span>
+        </div><hr style={{ borderColor: "#334155", marginBottom: "24px" }} />
+        
 
         {/* PROFILE + ALERT */}
         <div

@@ -20,6 +20,9 @@ class User(AbstractUser):
     is_approved = models.BooleanField(default=False)  
     is_active = models.BooleanField(default=True)
 
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+
     def save(self, *args, **kwargs):
         if self.role != "admin":
             self.is_approved = True

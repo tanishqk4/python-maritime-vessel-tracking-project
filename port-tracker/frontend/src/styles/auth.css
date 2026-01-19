@@ -19,9 +19,19 @@
 
 /* Logo */
 .auth-logo {
-  font-size: 32px;
-  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
 }
+
+.auth-logo img {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 50%; /* makes image itself circular */
+  background: transparent;
+}
+
 
 /* Title */
 .auth-title {
@@ -92,4 +102,20 @@
   color: #032e5a;
   font-weight: 600;
   text-decoration: none;
+}
+.auth-footer {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.auth-footer span {
+  color: #032e5a;
+  cursor: pointer;
+  font-weight: 600;
+  
+}
+
+.auth-footer span:hover {
+  color: #032e5a;
 }

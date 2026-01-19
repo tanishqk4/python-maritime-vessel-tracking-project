@@ -1,91 +1,120 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import logo from "../assets/logo.png";
 import "../styles/auth.css";
-import { Link } from "react-router-dom";
 
 export default function Register() {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     username: "",
+    first_name: "",
+    last_name: "",
     email: "",
     password: "",
     role: "operator",
   });
 
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleRegister = async () => {
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
     try {
       await api.post("/auth/register/", form);
-      setMessage("Registration successful! You can now log in.");
-    } catch (error) {
-      setMessage("Registration failed. Please try again.");
+      setSuccess("Registration successful. Please login.");
+      setTimeout(() => navigate("/login"), 1500);
+    } catch (err) {
+      setError(
+        err.response?.data?.error ||
+        "Registration failed. Please try again."
+      );
     }
   };
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-
-        {/* Logo */}
-        <div className="auth-logo">🚢</div>
-
-        {/* Title */}
-        <div className="auth-title">Vessel Tracker</div>
-        <div className="auth-subtitle">
-          Secure Fleet Management System
+      <form className="auth-card" onSubmit={handleRegister}>
+        
+        {/* LOGO */}
+        <div className="auth-logo">
+          <img src={logo} alt="Port Tracker" />
         </div>
 
-        {/* Username */}
-        <label>Username</label>
+        <h2 className="auth-title">Register</h2>
+
+        {error && <p className="auth-error">{error}</p>}
+        {success && <p style={{ color: "green", textAlign: "center" }}>{success}</p>}
+
         <input
-          type="text"
-          placeholder="Choose a username"
+          name="username"
+          placeholder="Username"
           value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          onChange={handleChange}
+          required
         />
 
-        {/* Email */}
-        <label>Email</label>
+        <input
+          name="first_name"
+          placeholder="First Name"
+          value={form.first_name}
+          onChange={handleChange}
+          required
+        />
+
+        <input
+          name="last_name"
+          placeholder="Last Name"
+          value={form.last_name}
+          onChange={handleChange}
+          required
+        />
+
         <input
           type="email"
-          placeholder="Enter your email"
+          name="email"
+          placeholder="Email"
           value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          onChange={handleChange}
+          required
         />
 
-        {/* Password */}
-        <label>Password</label>
         <input
           type="password"
-          placeholder="Create a password"
+          name="password"
+          placeholder="Password"
           value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          onChange={handleChange}
+          required
         />
 
-        {/* Role */}
-        <label>Role</label>
         <select
+          name="role"
           value={form.role}
-          onChange={(e) => setForm({ ...form, role: e.target.value })}
+          onChange={handleChange}
         >
           <option value="operator">Operator</option>
           <option value="analyst">Analyst</option>
           <option value="admin">Admin</option>
         </select>
 
-        {/* Button */}
-        <button onClick={handleRegister}>
-          Create Account
-        </button>
+        <button type="submit">Register</button>
 
-        {message && <p className="auth-message">{message}</p>}
-
-        {/* Link */}
-        <div className="auth-link">
-          Already have an account? <Link to="/login">Sign In</Link>
-        </div>
-
-      </div>
+        <p className="auth-footer">
+          Already have an account?{" "}
+          <span onClick={() => navigate("/login")}>
+            Login here
+          </span>
+        </p>
+      </form>
     </div>
   );
 }
