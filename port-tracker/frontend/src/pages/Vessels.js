@@ -30,7 +30,7 @@ export default function Vessels() {
 
     const res = await api.get("/vessels/", { params });
     setVessels(res.data);
-  }, [search, status, type]);
+  }, [search, status]);
 
   useEffect(() => {
     api.get("/alerts/")
