@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import api from "../services/api";
-import { Polygon } from "react-leaflet";
 import { Circle } from "react-leaflet";
 import { Polyline } from "react-leaflet";
 
@@ -55,18 +54,18 @@ export default function MapView() {
   const [type, setType] = useState("");
   const [weatherZones, setWeatherZones] = useState([]);
   const [history, setHistory] = useState([]);
-  const [selectedVessel, setSelectedVessel] = useState(null);
+  // const [selectedVessel, setSelectedVessel] = useState(null);
 
 
 
   // 🔑 store previous positions for animation
   const vesselPositionsRef = useRef({});
 
-  const getWeatherColor = (severity) => {
-    if (severity === "High") return "rgba(220,38,38,0.35)";
-    if (severity === "Medium") return "rgba(245,158,11,0.35)";
-    return "rgba(34,197,94,0.25)";
-  };
+  // const getWeatherColor = (severity) => {
+  //   if (severity === "High") return "rgba(220,38,38,0.35)";
+  //   if (severity === "Medium") return "rgba(245,158,11,0.35)";
+  //   return "rgba(34,197,94,0.25)";
+  // };
   useEffect(() => {
     api.get("/weather/zones/")
       .then(res => setWeatherZones(res.data))
@@ -92,14 +91,14 @@ export default function MapView() {
   /* ======================
      FETCH VESSELS (POLL)
   ====================== */
-  const fetchVessels = async () => {
+  const fetchVessels = React.useCallback(async () => {
     const params = {};
     if (search) params.search = search;
     if (type) params.vessel_type = type;
 
     const res = await api.get("/vessels/", { params });
     setVessels(res.data);
-  };
+  }, [search, type]);
 
   useEffect(() => {
     fetchVessels();
@@ -211,7 +210,7 @@ export default function MapView() {
                         cursor: "pointer",
                       }}
                       onClick={() => {
-                        setSelectedVessel(v.id);
+                        // setSelectedVessel(v.id);
                         api.get(`/vessels/${v.id}/history/`)
                           .then(res => setHistory(res.data))
                           .catch(() => {});

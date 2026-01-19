@@ -313,9 +313,9 @@ const thStyle = {
   fontWeight: 600,
 };
 
-const tdStyle = {
-  padding: "12px",
-  fontSize: "13px",
-  borderBottom: "1px solid #e5e7eb",
-};
+// const tdStyle = {
+//   padding: "12px",
+//   fontSize: "13px",
+//   borderBottom: "1px solid #e5e7eb",
+// };
 
