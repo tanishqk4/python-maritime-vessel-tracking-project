@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import VesselForm from "../components/VesselForm";
@@ -22,7 +22,7 @@ export default function Vessels() {
   const pageSize = 15;
 
 
-  const fetchVessels = async () => {
+  const fetchVessels = useCallback(async () => {
     const params = {};
     if (search) params.search = search;
     if (status) params.status = status;
@@ -30,7 +30,7 @@ export default function Vessels() {
 
     const res = await api.get("/vessels/", { params });
     setVessels(res.data);
-  };
+  }, [search, status, type]);
 
   useEffect(() => {
     api.get("/alerts/")
@@ -45,7 +45,7 @@ export default function Vessels() {
 
   useEffect(() => {
     fetchVessels();
-  }, [refresh, search, status]);
+  }, [fetchVessels, refresh]);
 
   const paginatedVessels = vessels.slice(
     (page - 1) * pageSize,

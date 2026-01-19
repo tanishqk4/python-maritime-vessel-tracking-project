@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import api from "../services/api";
@@ -91,7 +91,7 @@ export default function MapView() {
   /* ======================
      FETCH VESSELS (POLL)
   ====================== */
-  const fetchVessels = React.useCallback(async () => {
+  const fetchVessels = useCallback(async () => {
     const params = {};
     if (search) params.search = search;
     if (type) params.vessel_type = type;
@@ -104,7 +104,7 @@ export default function MapView() {
     fetchVessels();
     const interval = setInterval(fetchVessels, 15000);
     return () => clearInterval(interval);
-  }, [search, type]);
+  }, [fetchVessels]);
 
   /* ======================
      FETCH PORTS
