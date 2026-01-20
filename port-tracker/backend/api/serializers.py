@@ -29,6 +29,10 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop("password")
         user = User(**validated_data)
+
+        if user.role == "admin":
+            user.is_approved = False
+
         user.set_password(password)
         user.save()
         return user
@@ -56,6 +60,9 @@ from rest_framework.exceptions import PermissionDenied
 class CustomTokenSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
+
+        is_approved = getattr(self.user, "is_approved", True)
+
 
         self.user.last_login = timezone.now()
         self.user.save(update_fields=["last_login"])
