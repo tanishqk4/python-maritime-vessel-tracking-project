@@ -37,7 +37,7 @@ from .views import (
     CustomTokenView,
 )
 
-class CustomTokenView(TokenViewBase):
+class CustomTokenView(TokenObtainPairView):
     serializer_class = CustomTokenSerializer
 
 router = DefaultRouter()
