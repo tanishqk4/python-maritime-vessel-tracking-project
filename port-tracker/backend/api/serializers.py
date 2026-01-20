@@ -54,30 +54,37 @@ class UserSerializer(serializers.ModelSerializer):
             'date_joined',
         ]
 
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-TEMP_SUPERADMIN_USERNAME = "baba"
+TEMP_SUPERADMIN_USERNAME = "baba"  # bootstrap admin
 
 class CustomTokenSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
+        # ✅ Allow bootstrap superadmin always
         if self.user.username == TEMP_SUPERADMIN_USERNAME:
+            self.user.last_login = timezone.now()
+            self.user.save(update_fields=["last_login"])
             return data
 
+        # ✅ Safe fallback (if field missing)
         is_approved = getattr(self.user, "is_approved", True)
 
-
-        self.user.last_login = timezone.now()
-        self.user.save(update_fields=["last_login"])
-
-        if self.user.role == "admin" and not self.user.is_approved:
+        # ❌ Block unapproved admins BEFORE login success
+        if self.user.role == "admin" and not is_approved:
             raise PermissionDenied(
                 "Admin approval pending. Please wait for approval."
             )
 
+        # ✅ Update last login ONLY for successful login
+        self.user.last_login = timezone.now()
+        self.user.save(update_fields=["last_login"])
+
         return data
+
 
 
 # =========================
