@@ -13,7 +13,6 @@ from .views import (
     PortViewSet,
     admin_overview,
     broadcast_alert,
-    manual_sync,
     run_live_vessel_sync,
     subscribe_vessel,
     my_alerts,
