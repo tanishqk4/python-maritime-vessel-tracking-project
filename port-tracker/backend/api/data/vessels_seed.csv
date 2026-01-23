@@ -1,21 +1,42 @@
-name,mmsi,latitude,longitude,speed,heading,status,vessel_type
-MV Ocean Star,419000101,18.95,72.85,0,90,at_port,cargo
-MV Sea Hawk,419000102,18.96,72.86,12,120,at_sea,cargo
-MV Blue Wave,419000103,19.10,73.00,14,180,at_sea,tanker
-MV Coral Queen,419000104,13.10,80.30,0,45,at_port,cargo
-MV Iron Giant,419000105,22.60,88.40,8,200,at_sea,bulk
-MV Pacific Runner,419000106,1.30,103.90,16,270,at_sea,container
-MV Eastern Light,419000107,35.00,129.10,0,90,at_port,container
-MV Northern Wind,419000108,51.95,4.10,10,300,at_sea,tanker
-MV Atlantic Hope,419000109,33.75,-118.25,0,60,at_port,cargo
-MV Southern Cross,419000110,-33.90,18.45,13,190,at_sea,bulk
-MV Ocean King,419000111,25.05,55.10,0,10,at_port,container
-MV Silver Arrow,419000112,24.90,67.00,11,145,at_sea,cargo
-MV Golden Pearl,419000113,6.95,79.85,0,80,at_port,container
-MV Crimson Tide,419000114,20.32,86.61,9,260,at_sea,bulk
-MV Neptune,419000115,17.70,83.30,0,100,at_port,cargo
-MV Horizon,419000116,9.97,76.24,7,220,at_sea,fishing
-MV Voyager,419000117,15.40,73.80,0,40,at_port,container
-MV Explorer,419000118,8.76,78.13,6,310,at_sea,fishing
-MV Titan,419000119,23.05,70.23,0,95,at_port,bulk
-MV Odyssey,419000120,29.87,121.54,18,150,at_sea,container
+name,mmsi,vessel_type,latitude,longitude,speed,heading,status,current_port
+Ever Given,981100001,cargo,30.0444,32.5599,0,0,at_port,Suez Port
+Maersk Alabama,981100002,cargo,36.8440,-76.2923,0,0,at_port,Port of Norfolk
+MSC Zoe,155679223,cargo,52.3702,4.8952,0,0,at_port,Port of Amsterdam
+COSCO Shipping,115677923,cargo,31.2304,121.4737,0,0,at_port,Port of Shanghai
+HMM Algeciras,981794463,cargo,35.0952,129.0403,0,0,at_port,Port of Busan
+Atlantic Trader,881100006,tanker,25.7617,-80.1918,0,0,at_port,Port of Miami
+Pacific Queen,231100007,fishing,35.6895,139.6917,0,0,at_port,Port of Tokyo
+Baltic Pioneer,551000008,tanker,59.3293,18.0686,0,0,at_port,Port of Stockholm
+Arabian Pearl,981230087,tanker,25.2854,51.5310,0,0,at_port,Port of Doha
+Mediterranean Sun,981100456,cargo,41.3851,2.1734,0,0,at_port,Port of Barcelona
+
+Southern Cross,981100011,cargo,-33.8688,151.2093,14,92,at_sea,
+Indian Voyager,981100012,cargo,8.5241,76.9366,12,140,at_sea,
+Cape Horizon,981100013,tanker,-34.6037,18.4350,10,210,at_sea,
+North Sea Giant,981100014,tanker,56.2639,3.0000,13,60,at_sea,
+Pacific Dawn,981100015,cargo,1.3521,103.8198,16,275,at_sea,
+Atlantic Breeze,981100016,cargo,40.7128,-74.0060,15,110,at_sea,
+Gulf Navigator,981100017,tanker,24.4539,54.3773,11,180,at_sea,
+Red Sea Star,981100018,cargo,20.2961,38.2335,14,45,at_sea,
+Bay of Bengal One,981100019,cargo,15.2993,74.1240,13,95,at_sea,
+Tasman Explorer,981100020,cargo,-42.8821,147.3272,12,320,at_sea,
+MV Ocean Star,419000101,cargo,18.95,72.85,0,90,at_sea,
+MV Sea Hawk,419000102,cargo,18.96,72.86,12,120,at_sea,
+MV Blue Wave,419000103,tanker,19.10,73.00,14,180,at_sea,
+MV Coral Queen,419000104,cargo,13.10,80.30,0,45,at_sea,
+MV Iron Giant,419000105,bulk,22.60,88.40,8,200,at_sea,
+MV Pacific Runner,419000106,container,1.30,103.90,16,270,at_sea,
+MV Eastern Light,419000107,container,35.00,129.10,0,90,at_sea,
+MV Northern Wind,419000108,tanker,51.95,4.10,10,300,at_sea,
+MV Atlantic Hope,419000109,cargo,33.75,-118.25,0,60,at_sea,
+MV Southern Cross,419000110,bulk,-33.90,18.45,13,190,at_sea,
+MV Ocean King,419000111,container,25.05,55.10,0,10,at_sea,
+MV Silver Arrow,419000112,cargo,24.90,67.00,11,145,at_sea,
+MV Golden Pearl,419000113,container,6.95,79.85,0,80,at_sea,
+MV Crimson Tide,419000114,bulk,20.32,86.61,9,260,at_sea,
+MV Neptune,419000115,cargo,17.70,83.30,0,100,at_sea,
+MV Horizon,419000116,fishing,9.97,76.24,7,220,at_sea,
+MV Voyager,419000117,container,15.40,73.80,0,40,at_sea,
+MV Explorer,419000118,fishing,8.76,78.13,6,310,at_sea,
+MV Titan,419000119,bulk,23.05,70.23,0,95,at_sea,
+MV Odyssey,419000120,container,29.87,121.54,18,150,at_sea,
