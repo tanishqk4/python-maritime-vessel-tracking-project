@@ -834,3 +834,35 @@ def audit_logs(request):
     ]
 
     return Response(data)
+# api/views.py
+
+import subprocess
+import sys
+from django.conf import settings
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
+
+
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def run_live_vessel_sync(request):
+
+    secret = request.headers.get("X-SYNC-SECRET")
+    if secret != settings.SYNC_SECRET:
+        raise PermissionDenied("Invalid sync secret")
+
+    try:
+        subprocess.run(
+            [sys.executable, "manage.py", "sync_live_vessels"],
+            check=True
+        )
+        return Response({"status": "sync started"})
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=500
+        )
+
+

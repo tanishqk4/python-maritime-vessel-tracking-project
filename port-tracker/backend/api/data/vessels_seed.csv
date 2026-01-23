@@ -1,0 +1,21 @@
+name,mmsi,latitude,longitude,speed,heading,status,vessel_type
+MV Ocean Star,419000101,18.95,72.85,0,90,at_port,cargo
+MV Sea Hawk,419000102,18.96,72.86,12,120,at_sea,cargo
+MV Blue Wave,419000103,19.10,73.00,14,180,at_sea,tanker
+MV Coral Queen,419000104,13.10,80.30,0,45,at_port,cargo
+MV Iron Giant,419000105,22.60,88.40,8,200,at_sea,bulk
+MV Pacific Runner,419000106,1.30,103.90,16,270,at_sea,container
+MV Eastern Light,419000107,35.00,129.10,0,90,at_port,container
+MV Northern Wind,419000108,51.95,4.10,10,300,at_sea,tanker
+MV Atlantic Hope,419000109,33.75,-118.25,0,60,at_port,cargo
+MV Southern Cross,419000110,-33.90,18.45,13,190,at_sea,bulk
+MV Ocean King,419000111,25.05,55.10,0,10,at_port,container
+MV Silver Arrow,419000112,24.90,67.00,11,145,at_sea,cargo
+MV Golden Pearl,419000113,6.95,79.85,0,80,at_port,container
+MV Crimson Tide,419000114,20.32,86.61,9,260,at_sea,bulk
+MV Neptune,419000115,17.70,83.30,0,100,at_port,cargo
+MV Horizon,419000116,9.97,76.24,7,220,at_sea,fishing
+MV Voyager,419000117,15.40,73.80,0,40,at_port,container
+MV Explorer,419000118,8.76,78.13,6,310,at_sea,fishing
+MV Titan,419000119,23.05,70.23,0,95,at_port,bulk
+MV Odyssey,419000120,29.87,121.54,18,150,at_sea,container

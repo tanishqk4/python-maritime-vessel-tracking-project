@@ -13,6 +13,8 @@ from .views import (
     PortViewSet,
     admin_overview,
     broadcast_alert,
+    manual_sync,
+    run_live_vessel_sync,
     subscribe_vessel,
     my_alerts,
     port_congestion_metrics,
@@ -96,5 +98,6 @@ urlpatterns = [
 
     path("admin/users/<int:user_id>/toggle/", toggle_user_active),
 
-
+    path("internal/run-sync/", run_live_vessel_sync),
+    
 ]
