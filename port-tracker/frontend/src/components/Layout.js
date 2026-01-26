@@ -290,12 +290,8 @@ export default function Layout({ children }) {
 
         {/* NAV */}
         <nav style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {(user.role === "admin" || user.role === "analyst") && (
-            <Link to="/dashboard" style={navStyle(isActive("/dashboard"))}>Dashboard</Link>
-          )}
-          {(user.role === "admin" || user.role === "operator") && (
-            <Link to="/vessels" style={navStyle(isActive("/vessels"))}>Vessels</Link>
-          )}
+          <Link to="/dashboard" style={navStyle(isActive("/dashboard"))}>Dashboard</Link>
+          <Link to="/vessels" style={navStyle(isActive("/vessels"))}>Vessels</Link>
           <Link to="/map" style={navStyle(isActive("/map"))}>Map</Link>
           <Link to="/ports" style={navStyle(isActive("/ports"))}>Ports</Link>
 
