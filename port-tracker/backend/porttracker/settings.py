@@ -158,6 +158,9 @@ SIMPLE_JWT = {
 #CORS_ALLOWED_ORIGINS = [
 #    "http://localhost:3000",
 #]
+CORS_ALLOWED_ORIGINS = [
+    "https://maritime-vessel-tracking.vercel.app/",
+]
 
 CORS_ALLOW_ALL_ORIGINS = True
 

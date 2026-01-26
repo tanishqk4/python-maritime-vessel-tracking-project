@@ -10,10 +10,10 @@ import { Polyline } from "react-leaflet";
 ====================== */
 const getVesselIcon = (type) => {
   const iconMap = {
-    cargo: "🚢",
-    fishing: "🎣",
-    patrol: "🚓",
-    tanker: "⛽",
+    cargo: "🛳️",
+    fishing: "⛵",
+    patrol: "🚤",
+    tanker: "🚢",
   };
 
   return L.divIcon({
