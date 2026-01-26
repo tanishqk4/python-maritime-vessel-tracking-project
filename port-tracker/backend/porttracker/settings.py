@@ -20,7 +20,7 @@ DEBUG = os.getenv("DEBUG", "1") == "1"
 MARINESIA_API_KEY = os.getenv("MARINESIA_API_KEY")
 
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # ------------------------------------------------------------------------------
 # Installed Apps
@@ -159,10 +159,21 @@ SIMPLE_JWT = {
 #    "http://localhost:3000",
 #]
 CORS_ALLOWED_ORIGINS = [
-    "https://maritime-vessel-tracking.vercel.app/",
+    "https://maritime-vessel-tracking.vercel.app",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+    "accept",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
 
 
 # ------------------------------------------------------------------------------
